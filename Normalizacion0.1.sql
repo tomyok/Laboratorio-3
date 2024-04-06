@@ -10,7 +10,7 @@ CREATE TABLE Idioma(
 	Idioma varchar(50) not null unique
 )
 CREATE TABLE NivelIdioma(
-	IDNivelIdioma int not null primary key check(NivelIdioma between 1 and 5),
+	IDNivelIdioma int not null primary key check(IDNivelIdioma between 1 and 5),
 	NivelIdioma varchar(100) not null unique
 )
 CREATE TABLE Persona_x_Idioma_x_NivelIdioma(
