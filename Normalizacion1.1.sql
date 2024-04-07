@@ -1,35 +1,28 @@
 CREATE TABLE Cursos(
 	ID int not null primary key identity(1,1),
 	Nombre varchar(50) not null,
-)
-CREATE TABLE Costos(
-	ID int not null primary key identity(1,1),
-	IDCurso int not null foreign key references Cursos(ID),
 	CostoCursado money not null,
-	CostoCertificacion Money not null
+	CostoCertificacion Money not null,
+	FechaDeEstreno date not null,
+	Nivel varchar(50)
 )
 CREATE TABLE IdiomaAudio(
 	ID int not null primary key identity(1,1),
-	IDCurso int not null foreign key references Cursos(ID),
 	IdiomaAudio varchar(50) not null
 )
 CREATE TABLE Curso_x_IdiomaAudio(
-	
+	IDCurso int not null foreign key references Cursos(ID),
+	IDIdiomaAudio int not null foreign key references IdiomaAudio(ID),
+	constraint PK_Audio_Curso primary key (IDCurso, IDIdiomaAudio)
 )
 CREATE TABLE IdiomaSub(
 	ID int not null primary key identity(1,1),
-	IDCurso int not null foreign key references Cursos(ID),
 	IdiomaSub varchar(50) not null
 )
-CREATE TABLE FechaDeEstreno(
-	ID int not null primary key identity(1,1),
+CREATE TABLE Curso_x_IdiomaSub(
 	IDCurso int not null foreign key references Cursos(ID),
-	FechaDeEstreno date not null
-)
-CREATE TABLE Nivel(
-	ID int not null primary key identity(1,1),
-	IDCurso int not null foreign key references Cursos(ID),
-	Nivel varchar(50)
+	IDIdiomaSub int not null foreign key references IdiomaSub(ID),
+	constraint PK_Sub_Curso primary key (IDCurso, IDIdiomaSub)
 )
 
 /*--------------------------------------------------------------------*/
@@ -44,7 +37,6 @@ CREATE TABLE Categorias_x_Cursos(
 	IDCurso int not null foreign key references Cursos(ID),
 	constraint PK_Categorias_Cursos primary key (IDCategoria, IDCurso)
 )
-/*Hacer una tabla con idcat y idcurso*/
 
 /*--------------------------------------------------------------------*/
 
@@ -54,4 +46,10 @@ CREATE TABLE Clases(
 	NombreClase varchar(100) not null,
 	NroClase int not null,
 	Duracion int not null
+)
+
+/*--------------------------------------------------------------------*/
+
+CREATE TABLE Contenidos(
+	
 )
