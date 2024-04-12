@@ -1,55 +1,67 @@
-CREATE TABLE Cursos(
-	ID int not null primary key identity(1,1),
-	Nombre varchar(50) not null,
-	CostoCursado money not null,
-	CostoCertificacion Money not null,
-	FechaDeEstreno date not null,
-	Nivel varchar(50)
+Create Database Univ
+Go
+Use Univ
+Go
+Create Table Niveles(
+    ID smallint not null primary key identity(1, 1),
+    Nombre varchar(50) not null
 )
-CREATE TABLE IdiomaAudio(
-	ID int not null primary key identity(1,1),
-	IdiomaAudio varchar(50) not null
+Go
+Create Table Idiomas(
+    ID smallint not null primary key identity (1, 1),
+    Nombre varchar(50) not null
 )
-CREATE TABLE Curso_x_IdiomaAudio(
-	IDCurso int not null foreign key references Cursos(ID),
-	IDIdiomaAudio int not null foreign key references IdiomaAudio(ID),
-	constraint PK_Audio_Curso primary key (IDCurso, IDIdiomaAudio)
+Go
+Create Table Cursos(
+    ID int not null primary key identity (1, 1),
+    Nombre varchar(100) not null,
+    CostoCurso money not null,
+    CostoCertificacion money not null,
+    FechaEstreno date not null,
+    IDNivel smallint null foreign key references Niveles(ID)
 )
-CREATE TABLE IdiomaSub(
-	ID int not null primary key identity(1,1),
-	IdiomaSub varchar(50) not null
+Go
+Create Table FormatosIdioma(
+    ID smallint not null primary key identity (1, 1),
+    Nombre varchar(50) not null
 )
-CREATE TABLE Curso_x_IdiomaSub(
-	IDCurso int not null foreign key references Cursos(ID),
-	IDIdiomaSub int not null foreign key references IdiomaSub(ID),
-	constraint PK_Sub_Curso primary key (IDCurso, IDIdiomaSub)
+Go
+Create Table Idiomas_x_Curso(
+    IDIdioma smallint not null foreign key references Idiomas(ID),
+    IDCurso int not null foreign key references Cursos(ID),
+    IDFormatoIdioma smallint not null foreign key references FormatosIdioma(ID),
+    primary key (IDIdioma, IDCurso, IDFormatoIdioma)   
+)
+Go
+Create Table Clases(
+    ID bigint not null primary key identity(1,1),
+    IDCurso int not null foreign key references Cursos(ID),
+    Nombre varchar(100) not null,
+    Numero smallint not null,
+    Duracion int not null check (Duracion > 0)
+)
+Go
+Create Table TiposContenido(
+    ID smallint not null primary key identity(1,1),
+    Nombre varchar(50) not null
+)
+Go
+Create Table Contenidos(
+    ID bigint not null primary key identity(1, 1),
+    IDClase bigint not null foreign key references Clases(ID),
+    IDTipoContenido smallint not null foreign key references TiposContenido(ID),
+    Tamaño int not null
+)
+Go
+Create Table Categorias(
+    ID smallint not null primary key identity(1, 1),
+    Nombre varchar(100) not null
+)
+Go
+Create Table Categorias_x_Curso(
+    IDCurso int not null foreign key references Cursos(ID),
+    IDCategoria smallint not null foreign key references Categorias(ID),
+    primary key (IDCurso, IDCategoria)
 )
 
-/*--------------------------------------------------------------------*/
-
-CREATE TABLE Categorias(
-	ID int not null primary key identity(1,1),
-	Nombre varchar(50) not null,
-)
-
-CREATE TABLE Categorias_x_Cursos(
-	IDCategoria int not null foreign key references Categorias(ID),
-	IDCurso int not null foreign key references Cursos(ID),
-	constraint PK_Categorias_Cursos primary key (IDCategoria, IDCurso)
-)
-
-/*--------------------------------------------------------------------*/
-
-CREATE TABLE Clases(
-	ID int not null primary key identity(1,1),
-	IDCurso int not null foreign key references Cursos(ID),
-	NombreClase varchar(100) not null,
-	NroClase int not null,
-	Duracion int not null
-)
-
-/*--------------------------------------------------------------------*/
-
-CREATE TABLE Contenidos(
-	
-)
+-- Este script lo hizo el profesor, va a ser la base para la segunda parte de esta database "univ" y para las consultas siguientes.
