@@ -123,15 +123,15 @@ Create Table Inscripciones_x_Pagos(
 Go
 Create Table Resenias(
 	ID smallint not null primary key identity(1,1),
-	IDCurso int not null foreign key references Cursos(ID),
-	IDUsuario int not null foreign key references Usuarios(ID),
+	IDInscripciones smallint not null foreign key references Inscripciones(ID),
 	Resenia varchar(200) not null,
 	Puntaje int not null check(Puntaje between 0 and 10)
 )
+Go
 Create Table Certificacion(
 	ID smallint not null primary key identity(1,1),
-	IDCurso int not null foreign key references Cursos(ID),
-	IDUsuario int not null foreign key references Usuarios(ID),
+	IDInscripciones smallint not null foreign key references Inscripciones(ID),
 	FechaCertificacion Date not null,
 	CostoCertificacion money not null
 )
+Go
