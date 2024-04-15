@@ -100,6 +100,7 @@ Go
 Create Table Instructores_x_Curso(
 	IDInstructores int not null foreign key references Instructores(ID),
 	IDCurso int not null foreign key references Cursos(ID),
+	constraint PK_Instructores_x_Cursos primary key (IDinstructores, IDCurso)
 )
 Go
 Create Table Inscripciones(
@@ -111,26 +112,19 @@ Create Table Inscripciones(
 Go
 Create Table Pagos(
 	ID smallint not null primary key identity(1,1),
-	FechaPago date,
-	Pago money,
-)
-Go
-Create Table Inscripciones_x_Pagos(
 	IDInscripciones smallint not null foreign key references Inscripciones(ID),
-	IDPagos smallint not null foreign key references Pagos(ID)
-	constraint PK_Pagos_Inscripciones primary key (IDinscripciones, IDPagos)
+	FechaPago date not null,
+	Pago money not null check(Pago>=0)
 )
 Go
 Create Table Resenias(
-	ID smallint not null primary key identity(1,1),
-	IDInscripciones smallint not null foreign key references Inscripciones(ID),
+	IDInscripciones smallint not null primary key foreign key references Inscripciones(ID),
 	Resenia varchar(200) not null,
 	Puntaje int not null check(Puntaje between 0 and 10)
 )
 Go
 Create Table Certificacion(
-	ID smallint not null primary key identity(1,1),
-	IDInscripciones smallint not null foreign key references Inscripciones(ID),
+	IDInscripciones smallint not null primary key foreign key references Inscripciones(ID),
 	FechaCertificacion Date not null,
 	CostoCertificacion money not null
 )
