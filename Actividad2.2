@@ -1,0 +1,75 @@
+-- 1.Listado con nombre de usuario de todos los usuarios y sus respectivos nombres y apellidos.
+Select U.NombreUsuario, P.Nombres, P.Apellidos From Usuarios U
+Inner Join DatosPersonales P On U.ID = P.ID;
+
+-- 2.Listado con apellidos, nombres, fecha de nacimiento y nombre del país de nacimiento. 
+Select P.Apellidos, P.Nombres, P.Nacimiento, PP.Nombre as Pais From DatosPersonales P
+Inner Join Localidades_ L  On L.ID = P.IDLocalidad
+Inner Join Paises PP On PP.ID = L.IDPais
+
+
+-- 3.Listado con nombre de usuario, apellidos, nombres, email o celular de todos los usuarios que vivan en una domicilio comience con vocal.
+-- NOTA: Si no tiene email, obtener el celular.
+Select U.NombreUsuario, P.Apellidos, P.Nombres,
+Case
+	When P.Email is not null Then P.Email
+	Else P.Celular
+	End as EmailCelular
+From Usuarios U
+Inner Join DatosPersonales P On P.ID = U.ID
+Where P.Domicilio Like '[A,E,I,O,U]%'
+
+-- 4.Listado con nombre de usuario, apellidos, nombres, email o celular o domicilio como 'Información de contacto'.
+-- NOTA: Si no tiene email, obtener el celular y si no posee celular obtener el domicilio.
+Select U.NombreUsuario, P.Apellidos, P.Nombres,
+Case 
+	When P.Email is not null Then P.Email
+	Else
+		Case
+			When P.Celular is not null Then P.Celular
+			Else P.Domicilio 
+		End
+End as 'Informacion de contacto.'
+From Usuarios U
+Inner Join DatosPersonales P On P.ID = U.ID
+
+-- 5.Listado con apellido y nombres, nombre del curso y costo de la inscripción de todos los usuarios inscriptos a cursos.
+-- NOTA: No deben figurar los usuarios que no se inscribieron a ningún curso.
+Select P.Apellidos, P.Nombres, C.Nombre as Curso, I.Costo From DatosPersonales P
+Inner Join Usuarios U On U.ID = P.ID
+Inner Join Inscripciones I On I.IDUsuario = U.ID
+Inner Join Cursos C On C.ID = I.IDCurso
+
+-- 6.Listado con nombre de curso, nombre de usuario y mail de todos los inscriptos a cursos que se hayan estrenado en el año 2020.
+Select C.Nombre, U.NombreUsuario, P.Email From DatosPersonales P
+Inner Join Usuarios U
+On U.ID = P.ID
+Inner Join Inscripciones I
+On I.IDUsuario = U.ID
+Inner Join Cursos C
+On C.ID = I.IDCurso
+Where YEAR(C.Estreno) = 2020
+
+-- 7.Listado con nombre de curso, nombre de usuario, apellidos y nombres, fecha de inscripción, costo de inscripción, fecha de pago e importe de pago. Sólo listar información de aquellos que hayan pagado.
+Select C.Nombre, U.NombreUsuario, P.Apellidos, P.Nombres, I.Fecha as FechaInscripcion, I.Costo as CostoInscripcion, PA.Fecha as FechaDePago, PA.Importe as ImportePago From DatosPersonales P
+Inner Join Usuarios U
+On U.ID = P.ID
+Inner Join Inscripciones I
+On I.IDUsuario = U.ID
+Inner Join Cursos C
+On C.ID = I.IDCurso
+Inner Join Pagos PA
+On PA.IDInscripcion = I.ID
+
+-- 8.Listado con nombre y apellidos, género, fecha de nacimiento, mail, nombre del curso y fecha de certificación de todos aquellos usuarios que se hayan certificado.
+Select P.Nombres, P.Apellidos, P.Genero, P.Nacimiento, P.Email, C.Nombre as Curso, T.Fecha as FechaCertificacion From DatosPersonales P
+Inner Join Usuarios U
+On U.ID = P.ID
+Inner Join Inscripciones I
+On I.IDUsuario = U.ID
+Inner Join Cursos C
+On C.ID = I.IDCurso
+Inner Join Certificaciones T
+On T.IDInscripcion = I.ID
+
+-- 9.Listado de cursos con nombre, costo de cursado y certificación, costo total (cursado + certificación) con 10% de todos los cursos de nivel Principiante.
