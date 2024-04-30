@@ -128,3 +128,46 @@ On U.ID = P.ID
 Left Join Inscripciones I
 On I.IDUsuario = U.ID
 Where I.IDusuario is null
+
+-- 18.Listado con nombre y apellido, nombre del curso, puntaje otorgado y texto de la reseña. Sólo de aquellos usuarios que hayan realizado una reseña inapropiada.
+Select P.Nombres, P.Apellidos, C.Nombre, R.Puntaje, R.Observaciones From DatosPersonales P
+Inner Join Inscripciones I
+On I.IDUsuario = P.ID
+Inner Join Cursos C
+On C.ID = I.IDCurso
+Inner Join Reseñas R
+On R.IDInscripcion = I.ID
+Where R.Inapropiada = 1
+
+-- 19.Listado con nombre del curso, costo de cursado, costo de certificación, nombre del idioma y nombre del tipo de idioma de todos los cursos cuya fecha de estreno haya sido antes del año actual. Ordenado por nombre del curso y luego por nombre de tipo de idioma. Ambos ascendentemente.
+Select C.Nombre as Curso, C.CostoCurso, C.CostoCertificacion, I.Nombre as NombreIdioma, FI.Nombre as Formato From Cursos C
+Inner Join Idiomas_x_Curso IC
+On IC.IDCurso = C.ID
+Inner Join Idiomas I
+On I.ID = IC.IDIdioma
+Inner Join FormatosIdioma FI
+On FI.ID=IC.IDFormatoIdioma
+Where year(C.Estreno) < 2024
+Order By C.Nombre asc, FI.Nombre asc
+
+-- 20.Listado con nombre del curso y todos los importes de los pagos relacionados.
+Select C.Nombre as Curso, P.Importe as Pagos From Cursos C
+Inner Join Inscripciones I
+On I.IDCurso = C.ID
+Inner Join Pagos P
+On P.IDInscripcion = I.ID
+Order By C.Nombre 
+
+-- 21.Listado con nombre de curso, costo de cursado y una leyenda que indique "Costoso" si el costo de cursado es mayor a $ 15000, "Accesible" si el costo de cursado está entre $2500 y $15000, "Barato" si el costo está entre $1 y $2499 y "Gratis" si el costo es $0.
+Select Nombre as Curso, CostoCurso,
+Case
+	When CostoCurso = 0 Then 'Gratis'
+	Else Case
+		 When CostoCurso Between 0 and 2500 Then 'Barato'
+		 Else Case
+			  When CostoCurso >= 2500 and CostoCurso < 15000 Then 'Accesible'
+			  Else 'Costoso'
+		 End
+	End
+End As Consigna
+From Cursos
