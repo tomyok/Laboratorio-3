@@ -108,3 +108,86 @@ Group By CA.Nombre
 Having Count(CC.IDCurso) > 5
 
 -- 21.Listado con tipos de contenido y la cantidad de contenidos asociados a cada tipo. Mostrar también aquellos tipos que no hayan registrado contenidos con cantidad 0.
+Select TC.Nombre as NombreContenido, Count(C.IDTipo) as CantidadContenidos From Contenidos C
+left Join TiposContenido TC
+On C.IDTipo = TC.ID
+Group by TC.Nombre
+
+-- 22.Listado con Nombre del curso, nivel, año de estreno y el total recaudado en concepto de inscripciones. Listar también aquellos cursos sin inscripciones con total igual a $0
+Select C.Nombre as Curso, C.IDNivel as Nivel, C.Estreno, Sum(I.Costo) as TotalRecaudado From Cursos C
+Right Join Inscripciones I
+On I.IDCurso = C.ID
+Inner Join Niveles N
+On N.ID = C.IDNivel
+Group By C.Nombre, C.IDNivel, C.Estreno
+
+-- 23.Listado con Nombre del curso, costo de cursado y certificación y cantidad de usuarios distintos inscriptos cuyo costo de cursado sea menor a $10000 y cuya cantidad de usuarios inscriptos sea menor a 5. Listar también aquellos cursos sin inscripciones con cantidad 0.
+Select C.Nombre as Curso, C.CostoCurso, C.CostoCertificacion, Count(Distinct I.IDUsuario) as UsuariosInscriptos From Cursos C
+Left Join Inscripciones I
+On I.IDCurso = C.ID
+Where C.CostoCurso < 10000
+Group By C.Nombre, C.CostoCurso, C.CostoCertificacion
+Having Count(Distinct I.IDUsuario) < 5
+
+-- 24.Listado con Nombre del curso, fecha de estreno y nombre del nivel del curso que más recaudó en concepto de certificaciones.
+Select TOP (1) C.Nombre as Curso, C.Estreno, N.Nombre as Nivel, Max(CE.Costo) as RecaudacionCertificacion From Cursos C
+Inner Join Niveles N
+On N.ID = C.IDNivel
+inner join Inscripciones I
+On C.ID = I.IDCurso
+inner join Certificaciones CE
+On I.ID = CE.IDInscripcion
+Group By C.Nombre, C.Estreno, N.Nombre
+Order By Max(CE.Costo) desc
+
+-- 25.Listado con Nombre del idioma más utilizado como subtítulo.
+Select TOP (1) I.Nombre as Curso, Count(IC.IDFormatoIdioma) as FormatoSubtitulo From Idiomas I
+Inner Join Idiomas_x_Curso IC
+On I.ID = IC.IDIdioma
+Inner Join FormatosIdioma FI
+On IC.IDFormatoIdioma = FI.ID
+Where IC.IDFormatoIdioma = 1
+Group By I.Nombre
+Order By Count(IC.IDFormatoIdioma) desc
+
+-- 26.Listado con Nombre del curso y promedio de puntaje de reseñas apropiadas.
+Select C.Nombre as Curso, Avg(R.Puntaje) as PromedioPuntaje From Cursos C
+Inner Join Inscripciones I
+On I.IDCurso = C.ID
+Inner Join Reseñas R
+On R.IDInscripcion = I.ID
+Where R.Inapropiada = 0
+Group By C.Nombre
+
+-- 27.Listado con Nombre de usuario y la cantidad de reseñas inapropiadas que registró.
+Select U.NombreUsuario, Count(R.Inapropiada) as ReseñasInapropiadas From Usuarios U
+Inner Join Inscripciones I
+On I.IDUsuario = U.ID
+Inner Join Reseñas R
+On R.IDInscripcion = I.ID
+Where R.Inapropiada = 1
+Group By U.NombreUsuario
+
+-- 28.Listado con Nombre del curso, nombre y apellidos de usuarios y la cantidad de veces que dicho usuario realizó dicho curso. No mostrar cursos y usuarios que contabilicen cero.
+Select C.Nombre as Curso, DP.Nombres + ', ' + DP.Apellidos NombreYApellido, Count(I.IDCurso) CantidadVecesCurso From Cursos C
+Inner Join Inscripciones I
+On I.IDCurso = C.ID
+Inner Join DatosPersonales DP
+On DP.ID = I.IDUsuario
+Group By C.Nombre, DP.Nombres + ', ' + DP.Apellidos
+
+-- 29.Listado con Apellidos y nombres, mail y duración total en concepto de clases de cursos a los que se haya inscripto. Sólo listar información de aquellos registros cuya duración total supere los 400 minutos.
+Select DP.Nombres + ', ' + DP.Apellidos NombreYApellido, DP.Email, Sum(CL.Duracion) as DuracionTotal From DatosPersonales DP
+Inner Join Inscripciones I
+On I.IDUsuario = DP.ID
+Inner Join Clases CL
+On CL.IDCurso = I.IDCurso
+Group By DP.Nombres, DP.Apellidos, DP.Email
+Having Sum(CL.Duracion) > 400
+
+-- 30.Listado con nombre del curso y recaudación total. La recaudación total consiste en la sumatoria de costos de inscripción y de certificación. Listarlos ordenados de mayor a menor por recaudación.
+Select C.Nombre as Curso, Sum(C.CostoCertificacion+I.Costo) as RecaudacionTotal From Cursos C
+Inner Join Inscripciones I
+On I.IDCurso = C.ID
+Group By C.Nombre
+Order By Sum(C.CostoCertificacion+I.Costo) desc
