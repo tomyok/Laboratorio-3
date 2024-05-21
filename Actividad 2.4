@@ -62,17 +62,16 @@ Where C.IDTipo = 1
 
 -- 7.Listado con nombre de país y la cantidad de usuarios de género masculino y la cantidad de usuarios de género femenino que haya registrado.
 
-Select PM.Nombre As Pais, Count(DP.Genero) As CantMas,
-(Select Count(DP.Genero) From DatosPersonales DP
+Select PM.Nombre As Pais,
+(
+Select Count(DP.Genero) From DatosPersonales DP
 Inner Join Localidades_ L
 On L.ID = DP.IDLocalidad
-Inner Join Paises P
-On P.ID = L.IDPais
-Where DP.Genero Like 'F' And P.Nombre = PM.Nombre)
-As CantFem From DatosPersonales DP
+Where DP.Genero Like 'M' and PM.ID = L.IDPais) As CantMas,
+(
+Select Count(DP.Genero) From DatosPersonales DP
 Inner Join Localidades_ L
 On L.ID = DP.IDLocalidad
-Inner Join Paises PM
-On PM.ID = L.IDPais
-Where DP.Genero = 'M'
-Group By PM.Nombre
+Where DP.Genero Like 'F' and PM.ID = L.IDPais)
+As CantFem 
+From Paises PM
