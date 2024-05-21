@@ -1,0 +1,78 @@
+-- 1.Listado con apellidos y nombres de los usuarios que no se hayan inscripto a cursos durante el año 2019.
+Select Distinct DP.Nombres, DP.Apellidos From DatosPersonales DP
+Inner Join Inscripciones I
+On I.IDUsuario = DP.ID
+Where I.IDUsuario Not In(
+Select IDUsuario From Inscripciones Where Year(Fecha) = 2019
+)
+
+-- 2.Listado con apellidos y nombres de los usuarios que se hayan inscripto a cursos pero no hayan realizado ningún pago.
+Select Distinct DP.Nombres, DP.Apellidos From DatosPersonales DP
+Inner Join Inscripciones I
+On I.IDUsuario = DP.ID
+Where I.IDUsuario Not In(
+Select I.IDUsuario From Inscripciones I
+Inner Join Pagos P
+On P.IDInscripcion = I.ID
+)
+
+-- 3.Listado de países que no tengan usuarios relacionados.
+Select Distinct P.Nombre From Paises P Where P.Nombre Not In(
+Select Distinct P.Nombre From Paises P
+Inner Join Localidades_ L
+On L.IDPais = P.ID
+Inner Join DatosPersonales DP
+On DP.IDLocalidad = L.ID
+)
+
+-- 4.Listado de clases cuya duración sea mayor a la duración promedio.
+Select C.Nombre As NombreDeLaClase, C.Duracion From Clases C Where C.Duracion > (
+Select Avg(Duracion) As Duracion From Clases
+)
+
+-- 5.Listado de contenidos cuyo tamaño sea mayor al tamaño de todos los contenidos de tipo 'Audio de alta calidad'.
+Select C.ID As IDContenidosMayores From Contenidos C Where C.Tamaño > (
+Select Max(C.Tamaño) From Contenidos C
+Inner Join TiposContenido TP
+On TP.ID = C.IDTipo
+Where C.IDTipo = 1
+)
+-- Usando All.
+Select C.ID As IDContenidosMayores From Contenidos C Where C.Tamaño > All(
+Select C.Tamaño From Contenidos C
+Inner Join TiposContenido TP
+On TP.ID = C.IDTipo
+Where C.IDTipo = 1
+)
+
+-- 6.Listado de contenidos cuyo tamaño sea menor al tamaño de algún contenido de tipo 'Audio de alta calidad'.
+Select C.ID As IDContenidosMenores From Contenidos C Where C.Tamaño < (
+Select Max(C.Tamaño) From Contenidos C
+Inner Join TiposContenido TP
+On TP.ID = C.IDTipo
+Where C.IDTipo = 1
+)
+-- Usando Any.
+Select C.ID As IDContenidosMenores From Contenidos C Where C.Tamaño < Any(
+Select C.Tamaño From Contenidos C
+Inner Join TiposContenido TP
+On TP.ID = C.IDTipo
+Where C.IDTipo = 1
+)
+
+-- 7.Listado con nombre de país y la cantidad de usuarios de género masculino y la cantidad de usuarios de género femenino que haya registrado.
+
+Select PM.Nombre As Pais, Count(DP.Genero) As CantMas,
+(Select Count(DP.Genero) From DatosPersonales DP
+Inner Join Localidades_ L
+On L.ID = DP.IDLocalidad
+Inner Join Paises P
+On P.ID = L.IDPais
+Where DP.Genero Like 'F' And P.Nombre = PM.Nombre)
+As CantFem From DatosPersonales DP
+Inner Join Localidades_ L
+On L.ID = DP.IDLocalidad
+Inner Join Paises PM
+On PM.ID = L.IDPais
+Where DP.Genero = 'M'
+Group By PM.Nombre
