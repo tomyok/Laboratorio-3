@@ -84,7 +84,7 @@ End
 
 Select u.NombreUsuario, dbo.FN_CalcularEdad(u.ID) As Edad From Usuarios u
 
--- 4.Hacer una función llamada Fn_PuntajeCurso que a partir de un IDCurso devuelva el promedio de puntaje en concepto de reseñas.
+-- 4.Hacer una función llamada Fn_PuntajeCurso que a partir de un IDCurso devuelva el promedio de puntaje en concepto de reseñas..
 
 Create or Alter Function FN_PuntajeCurso(
 @IDCurso int
