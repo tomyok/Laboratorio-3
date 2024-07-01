@@ -75,7 +75,7 @@ Begin
 					ELSE
 						YEAR(GETDATE()) - YEAR(dp.Nacimiento) -1
 				END
-			From DatosPersonales AS dp
+			From Datos_Personales AS dp
 			Inner Join Usuarios u On u.ID = dp.ID
 			Where u.ID = @IDUsuario
 
@@ -91,6 +91,36 @@ Create or Alter Function FN_PuntajeCurso(
 )
 Returns int
 As
+Begin
+
+	Declare @PromedioPuntaje decimal
+
+	Select @PromedioPuntaje = Avg(R.Puntaje) From Reseñas R
+	Inner Join Inscripciones I On R.IDInscripcion = I.ID
+	Inner Join Cursos C On I.IDCurso = C.ID
+	Where C.ID = @IDCurso
+
+	Return @PromedioPuntaje
+
+End
+
+Select C.Nombre, dbo.FN_PuntajeCurso(C.ID) As PromedioPuntaje from Cursos C
+
+-- 5.Hacer una vista que muestre por cada usuario el apellido y nombre, una columna llamada Contacto que muestre el celular, si no tiene celular el teléfono, si no tiene teléfono el email, si no tiene email el domicilio. También debe mostrar la edad del usuario, el total pagado y el total adeudado.
+
+Create Or Alter View VW_Usuarios
+As
+Select
+	DP.Nombres,
+	DP.Apellidos,
+	COALESCE(DP.Celular, DP.Telefono, DP.Email, DP.Domicilio) AS Contacto,
+	dbo.FN_CalcularEdad(DP.ID) As Edad,
+	dbo.FN_PagosxUsuario(DP.ID) As TotalPagado,
+	dbo.FN_DeudaxUsuario(DP.ID) As TotalAdeudado
+
+	From Datos_Personales DP;
+
+	Select * From VW_Usuarios 
 Begin
 
 	Select
