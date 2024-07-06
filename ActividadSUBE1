@@ -1,0 +1,53 @@
+Create Database SUBE
+go
+Use SUBE
+go
+Create Table Usuarios(
+ID Int not null Primary Key Identity(1,1),
+Apellido Varchar(100) not null,
+Nombre Varchar(100) not null,
+DNI Int not null unique,
+FechaPrimerTarjeta Date not null,
+SaldoUltimaTarjeta Money not null default 0,
+CantViajesRealizados Int not null default 0,
+Domicilio Varchar(100) not null,
+Edad Int not null,
+Activo Bit not null Default 1
+)
+go
+Create Table Tarjeta(
+ID Int not null Primary Key Identity(1,1),
+Apellido Varchar(100) not null,
+Nombre Varchar(100) not null,
+DNI Int not null,
+FechaAltaTarjeta Date,
+Saldo Money not null default 0,
+Activo Bit not null Default 1
+)
+go
+Create Table LineasColectivos(
+ID Int not null Primary Key Identity(1,1),
+CodigoLinea Int not null,
+NombreEmpresa Varchar(100) not null,
+DomicilioLegal Varchar(100) not null
+)
+go
+Create Table Viajes(
+ID Int not null Primary Key Identity(1,1),
+CodigoViaje Int not null,
+FechaHoraViaje DateTime not null,
+NumeroInterno Int not null,
+LineaColectivo Int not null Foreign Key References LineasColectivos(ID),
+NumeroTarjeta Int not null Foreign Key References Tarjeta(ID),
+Importe Money not null,
+IDUsuario Int not null Foreign Key References Usuarios(ID)
+)
+go
+Create Table MovimientoTarjeta(
+ID Int not null Primary Key Identity(1,1),
+NumeroMovimiento Int not null,
+FechaHoraMovimiento DateTime not null,
+NumeroTarjeta Int not null Foreign Key References Tarjeta(ID),
+Importe Money not null,
+TipoMovimiento Char not null Check(TipoMovimiento = 'C' Or TipoMovimiento = 'D')
+)
