@@ -1,0 +1,103 @@
+Use SUBE
+go
+
+--A) Realizar una vista que permita conocer los datos de los usuarios y sus respectivas tarjetas. La misma debe contener: Apellido y nombre del usuario, número de tarjeta SUBE, estado de la tarjeta y saldo.
+
+Create Or Alter View VW_UsuariosTarjetas
+As
+Select
+		U.Apellido,
+		U.Nombre,
+		T.ID As NumeroTarjeta,
+		T.Activo As TarjetaActiva,
+		T.Saldo As TarjetaSaldo
+
+		From Usuarios U
+		Inner Join Tarjeta T On T.IDUsuario = U.ID;
+
+		Select * From VW_UsuariosTarjetas
+
+--B) Realizar una vista que permita conocer los datos de los usuarios y sus respectivos viajes. La misma debe contener: Apellido y nombre del usuario, número de tarjeta SUBE, fecha del viaje, importe del viaje, número de interno y nombre de la línea.
+
+Create Or Alter View VW_UsuariosViajes
+As
+Select 
+		U.Apellido,
+		U.Nombre,
+		T.ID As NumeroTarjeta,
+		V.FechaHoraViaje,
+		V.Importe As ImporteViaje,
+		V.NumeroInterno As NumeroDeInterno,
+		L.NombreEmpresa
+
+		From Usuarios U
+		Inner Join Tarjeta T On T.IDUsuario = U.ID
+		Inner Join Viajes V On V.IDNumeroTarjeta = T.ID
+		Inner Join LineasColectivos L On L.ID = V.IDLineaColectivo
+
+		Select * From VW_UsuariosViajes
+
+--C) Realizar una vista que permita conocer los datos estadísticos de cada tarjeta. La misma debe contener: Apellido y nombre del usuario, número de tarjeta SUBE, cantidad de viajes realizados, total de dinero acreditado (históricamente), cantidad de recargas, importe de recarga promedio (en pesos), estado de la tarjeta.
+
+Create Or Alter Function FN_TotalDineroAcreditado(
+@IDTarjeta Int
+)
+Returns Money
+As
+Begin
+		Declare @TotalDinero money
+
+		Select @TotalDinero = Sum(MV.Importe) From MovimientoTarjeta MV 
+		Where MV.TipoMovimiento = 'C' And MV.IDNumeroTarjeta = @IDTarjeta
+
+		Return @TotalDinero
+
+End
+
+Create Or Alter Function FN_CantidadRecargaTarjeta(
+@IDTarjeta Int
+)
+Returns Int
+As
+Begin
+		Declare @CantidadRecargas Int
+
+		Select @CantidadRecargas = Count(MV.ID) From MovimientoTarjeta MV
+		Where MV.TipoMovimiento = 'C' And MV.IDNumeroTarjeta = @IDTarjeta
+
+		Return @CantidadRecargas
+
+End
+
+Create Or Alter Function FN_ImporteRecargaPromedio(
+@IDTarjeta Int
+)
+Returns Money
+As
+Begin
+		Declare @TotalImporte money
+
+		Select @TotalImporte = Avg(MV.Importe) From MovimientoTarjeta MV 
+		Where MV.TipoMovimiento = 'C' And MV.IDNumeroTarjeta = @IDTarjeta
+
+		Return @TotalImporte
+
+End
+
+Create Or Alter View VW_EstadisticaTarjeta
+As
+Select
+		U.Apellido,
+		U.Nombre,
+		T.ID As NumeroTarjeta,
+		U.CantViajesRealizados,
+		dbo.FN_TotalDineroAcreditado(T.ID) As TotalDineroAcreditado,
+		dbo.FN_CantidadRecargaTarjeta(T.ID) As CantidadRecargaTarjeta,
+		dbo.FN_ImporteRecargaPromedio(T.ID) As ImporteRecargaPromedio
+
+		From Usuarios U
+		Inner Join Tarjeta T On T.IDUsuario = U.ID
+		Inner Join Viajes V On V.IDNumeroTarjeta = T.ID
+		Inner Join LineasColectivos L On L.ID = V.IDLineaColectivo
+
+Select * From VW_EstadisticaTarjeta
