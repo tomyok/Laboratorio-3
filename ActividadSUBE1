@@ -37,9 +37,9 @@ ID Int not null Primary Key Identity(1,1),
 CodigoViaje Int not null,
 FechaHoraViaje DateTime not null,
 NumeroInterno Int not null,
-LineaColectivo Int not null Foreign Key References LineasColectivos(ID),
-NumeroTarjeta Int not null Foreign Key References Tarjeta(ID),
-Importe Money not null,
+IDLineaColectivo Int not null Foreign Key References LineasColectivos(ID),
+IDNumeroTarjeta Int not null Foreign Key References Tarjeta(ID),
+Importe Money not null check (Importe > 0),
 IDUsuario Int not null Foreign Key References Usuarios(ID)
 )
 go
@@ -47,7 +47,9 @@ Create Table MovimientoTarjeta(
 ID Int not null Primary Key Identity(1,1),
 NumeroMovimiento Int not null,
 FechaHoraMovimiento DateTime not null,
-NumeroTarjeta Int not null Foreign Key References Tarjeta(ID),
+IDNumeroTarjeta Int not null Foreign Key References Tarjeta(ID),
 Importe Money not null,
+TipoMovimiento Char not null Check(TipoMovimiento = 'C' Or TipoMovimiento = 'D')
+)
 TipoMovimiento Char not null Check(TipoMovimiento = 'C' Or TipoMovimiento = 'D')
 )
