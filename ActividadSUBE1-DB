@@ -17,6 +17,7 @@ Activo Bit not null Default 1
 go
 Create Table Tarjeta(
 ID Int not null Primary Key Identity(1,1),
+IDUsuario Int not null Foreign Key References Usuarios(ID),
 Apellido Varchar(100) not null,
 Nombre Varchar(100) not null,
 DNI Int not null,
@@ -49,7 +50,5 @@ NumeroMovimiento Int not null,
 FechaHoraMovimiento DateTime not null,
 IDNumeroTarjeta Int not null Foreign Key References Tarjeta(ID),
 Importe Money not null,
-TipoMovimiento Char not null Check(TipoMovimiento = 'C' Or TipoMovimiento = 'D')
-)
 TipoMovimiento Char not null Check(TipoMovimiento = 'C' Or TipoMovimiento = 'D')
 )
