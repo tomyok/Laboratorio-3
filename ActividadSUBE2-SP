@@ -1,0 +1,97 @@
+Use SUBE
+go
+
+--A) Realizar un procedimiento almacenado llamado sp_Agregar_Usuario que permita registrar un usuario en el sistema. El procedimiento debe recibir como parámetro DNI, Apellido, Nombre, Fecha de nacimiento y los datos del domicilio del usuario.
+
+Create Or Alter Function FN_CalcularEdad(
+@Fecha Date
+)
+Returns int
+As
+Begin
+	
+	Declare @Edad int
+
+	Select @Edad = CASE
+			WHEN MONTH(GETDATE()) > MONTH(@Fecha) OR
+			(MONTH(GETDATE()) = MONTH(@Fecha) AND DAY(GETDATE()) >= DAY(@Fecha))
+			THEN YEAR(GETDATE()) - YEAR(@Fecha)
+					ELSE
+						YEAR(GETDATE()) - YEAR(@Fecha) -1
+				END
+
+			Return @Edad
+End
+
+Create Or Alter Procedure SP_AgregarUsuario(
+@Apellido Varchar(100),
+@Nombre Varchar(100),
+@DNI int,
+@Domicilio Varchar(100),
+@FechaNacimiento Date
+)
+As
+Begin
+		Insert Into Usuarios (Apellido, Nombre, DNI, Domicilio, Edad) Values (@Apellido, @Nombre, @DNI, @Domicilio, dbo.FN_CalcularEdad(@FechaNacimiento))
+End
+
+Exec SP_AgregarUsuario Caceres, Tomas, 45466508, 'Coronel Bogado 1790', '2003-12-29'
+
+--B) Realizar un procedimiento almacenado llamado sp_Agregar_Tarjeta que dé de alta una tarjeta. El procedimiento solo debe recibir el DNI del usuario.
+--Como el sistema sólo permite una tarjeta activa por usuario, el procedimiento debe:
+--Dar de baja la última tarjeta del usuario (si corresponde).
+--Dar de alta la nueva tarjeta del usuario.
+--Traspasar el saldo de la vieja tarjeta a la nueva tarjeta (si corresponde).
+
+Create Or Alter Function FN_TieneTarjeta(
+	@IDUsuario Int
+)
+Returns Bit
+As
+Begin
+		Declare @Bandera bit
+
+		Select @Bandera = Case
+							When Count(*) > 0 Then 1
+							Else 0
+						End
+		From Tarjeta
+		Where Tarjeta.IDUsuario = @IDUsuario
+
+		Return @Bandera;
+End
+
+
+Create Or Alter Procedure SP_AgregarTarjeta(
+@DNI Int
+)
+As
+Begin
+
+		Declare @TieneTarjeta Bit
+		Declare @IDUsuario Int
+		Declare @SaldoViejo Money
+
+		Set @IDUsuario = (Select ID From Usuarios Where DNI = @DNI)
+		
+		Set @TieneTarjeta = dbo.FN_TieneTarjeta(@IDUsuario)
+
+		If @TieneTarjeta = 1 Begin
+
+		Update Tarjeta Set Activo = 0 Where IDUsuario = @IDUsuario;
+		Select @SaldoViejo = Saldo From Tarjeta Where IDUsuario = @IDUsuario Order By FechaAltaTarjeta Desc;
+
+
+		Insert Into Tarjeta (IDUsuario, FechaAltaTarjeta, Saldo) Values (@IDUsuario, GetDate(), @SaldoViejo)
+
+		End
+
+		Else
+		Begin
+
+		Insert Into Tarjeta (IDUsuario, FechaAltaTarjeta, Saldo) Values (@IDUsuario, GetDate(), 10000)
+
+		End
+End
+
+Exec SP_AgregarTarjeta 45466508
