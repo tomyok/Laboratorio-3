@@ -1,0 +1,39 @@
+--B) Realizar un procedimiento almacenado llamado sp_Agregar_Tarjeta que dé de alta una tarjeta. El procedimiento solo debe recibir el DNI del usuario.
+--Como el sistema sólo permite una tarjeta activa por usuario, el procedimiento debe:
+--Dar de baja la última tarjeta del usuario (si corresponde).
+--Dar de alta la nueva tarjeta del usuario.
+--Traspasar el saldo de la vieja tarjeta a la nueva tarjeta (si corresponde).
+
+Create Or Alter Procedure SP_AgregarTarjeta(
+@DNI Int
+)
+As
+Begin
+
+		Declare @TieneTarjeta Bit
+		Declare @IDUsuario Int
+		Declare @SaldoViejo Money
+
+		Set @IDUsuario = (Select ID From Usuarios Where DNI = @DNI)
+		
+		Select @TieneTarjeta = Count(*) From Tarjeta T Where T.IDUsuario = @IDUsuario
+
+		If @TieneTarjeta > 0 Begin
+
+		Update Tarjeta Set Activo = 0 Where IDUsuario = @IDUsuario;
+		Select @SaldoViejo = Saldo From Tarjeta Where IDUsuario = @IDUsuario Order By FechaAltaTarjeta Desc;
+
+
+		Insert Into Tarjeta (IDUsuario, FechaAltaTarjeta, Saldo) Values (@IDUsuario, GetDate(), @SaldoViejo)
+
+		End
+
+		Else
+		Begin
+
+		Insert Into Tarjeta (IDUsuario, FechaAltaTarjeta, Saldo) Values (@IDUsuario, GetDate(), 10000)
+
+		End
+End
+
+Exec SP_AgregarTarjeta 45466508
