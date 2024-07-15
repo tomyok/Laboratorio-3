@@ -1,0 +1,114 @@
+Create Database ExamenRecuperatorio
+go
+use ExamenRecuperatorio
+go
+Create Table Actividades(
+ID_Actividad BigInt Not Null Primary Key Identity(1,1),
+Nombre Varchar(100) Not Null,
+FechaDisponibleDesde Date Not Null,
+CostoActividad Money Not Null Check(CostoActividad >= 0),
+Estado Bit Not Null
+)
+go
+Create Table Socios(
+ID_Socio BigInt Not Null Primary Key Identity(1,1),
+Apellidos Varchar(100) Not Null,
+Nombres Varchar(100) Not Null,
+FechaNacimiento Date Not Null,
+FechaAsociacion Date Not Null,
+Estado Bit Not Null
+)
+go
+Create Table ActividadesxSocio(
+ID_Socio BigInt Not Null Foreign Key References Socios(ID_Socio),
+ID_Actividad BigInt Not Null Foreign Key References Actividades(ID_Actividad),
+FechaInscripcion Date Not Null Primary Key
+)
+go
+
+--Haciendo uso de las tablas realizadas en el punto anterior resolver la siguiente consulta de selección: Listar todos los datos de todos los socios que hayan realizado todas las actividades que ofrece el club.
+
+Select S.Apellidos Apellido, S.Nombres Nombre, S.FechaNacimiento FechaDeNacimiento, S.FechaAsociacion FechaDeAsociacion From Socios S 
+Inner Join ActividadesXSocio AXS On S.ID_Socio = AXS.ID_Socio
+Group By S.ID_Socio, S.Apellidos, S.Nombres, S.FechaNacimiento, S.FechaAsociacion, S.Estado
+Having Count(Distinct AXS.ID_Actividad) = (Select Count(*) From Actividades)
+
+--Haciendo uso de la base de datos que se encuentra en el Campus Virtual resolver:
+--Hacer un trigger que al ingresar un registro no permita que un docente pueda tener una materia con el cargo de profesor (IDCargo = 1) si no tiene una antigüedad de al menos 5 años. Tampoco debe permitir que haya más de un docente con el cargo de profesor (IDCargo = 1) en la misma materia y año. Caso contrario registrar el docente a la planta docente.
+
+Create Or Alter Trigger TR_Docente On PlantaDocente
+Instead Of Insert
+As Begin
+	Begin Try
+	Begin Transaction
+
+	Declare @AñoIngreso Int
+	Declare @AñosAntiguedad Int
+	Declare @Legajo BigInt
+	Declare @Cargo TinyInt
+	Declare @IDMateria BigInt
+	Declare @Año Int
+	Declare @CantProfesores Int
+
+	Select @Legajo = Legajo, @Cargo = ID_Cargo, @IDMateria = ID_Materia, @Año = Año  From inserted
+
+	Select @AñoIngreso = AñoIngreso From Docentes Where @Legajo = Legajo
+
+	Set @AñosAntiguedad = Year(GETDATE()) - @AñoIngreso
+
+	Select @CantProfesores = Count(*) From PlantaDocente Where ID_Materia = @IDMateria And Año = @Año And ID_Cargo = 1
+	
+	If @Cargo = 1 Begin
+
+	If @AñosAntiguedad < 5 Begin
+	Raiserror('No tiene una antiguedad de al menos 5 años.', 16, 0)
+	End
+
+	If @CantProfesores >= 1 Begin
+	Raiserror('Ya existe un docente con el cargo de profesor para esta materia y año.', 16, 0)
+	End
+
+	Insert Into PlantaDocente (Legajo, ID_Materia, ID_Cargo, Año) Values (@Legajo, @IDMateria, @Cargo, @Año)
+	Commit Transaction
+	End
+	Else Begin
+	Insert Into PlantaDocente (Legajo, ID_Materia, ID_Cargo, Año) Values (@Legajo, @IDMateria, @Cargo, @Año)
+	Commit Transaction
+	End
+	End Try
+	Begin Catch
+	Print Error_Message()
+	Rollback Transaction
+	End Catch
+End
+
+--Hacer una función SQL que a partir de un legajo docente y un año devuelva la cantidad de horas semanales que dedicará esa persona a la docencia ese año. La cantidad de horas es un número entero >= 0.
+--NOTA: No hay que multiplicar el valor por la cantidad de semanas que hay en un año.
+Create Or Alter Function FN_CantidadHorasSemanales(
+@LegajoDocente BigInt,
+@Año Int
+)
+Returns Int
+As
+Begin
+	Declare @CantidadHs Int = 0
+
+	Select @CantidadHs = Coalesce(Sum(M.HorasSemanales),0) From Materias M 
+	Inner Join PlantaDocente PD On PD.ID_Materia = M.ID_Materia
+	Where PD.Año = @Año And @LegajoDocente = PD.Legajo
+
+	Return @CantidadHs
+End
+
+--Hacer un procedimiento almacenado que reciba un ID de Materia y liste la cantidad de docentes distintos que han trabajado en ella.
+Create Or Alter Procedure SP_CantidadDocentesXMateria(
+@IDMateria BigInt
+)
+As
+Begin
+	
+	Select Count(Distinct Legajo) From PlantaDocente Where ID_Materia = @IDMateria
+
+End
+
+Insert Into PlantaDocente (Legajo, ID_Materia, ID_Cargo, Año) Values (3, 2, 2, 2024)
