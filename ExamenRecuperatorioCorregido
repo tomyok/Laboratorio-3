@@ -1,0 +1,118 @@
+--Haciendo uso de las tablas realizadas en el punto anterior resolver la siguiente consulta de selección: Listar todos los datos de todos los socios que hayan realizado todas las actividades que ofrece el club.
+Declare @CantidadActividades Int
+
+Set @CantidadActividades = (Select Coalesce(Count (*),0)From Actividades)
+
+Select S.Apellidos, S.Nombres, S.FechaNacimiento, S.FechaAsociacion, S.Estado, Count(Distinct AXS.ID_Actividad) As CantidadActividades From Socios S
+Inner Join ActividadesxSocio AXS On AXS.ID_Socio = S.ID_Socio
+Group By S.Apellidos, S.Nombres, S.FechaNacimiento, S.FechaAsociacion, S.Estado
+Having Count(Distinct AXS.ID_Actividad) = @CantidadActividades
+
+
+--Hacer un trigger que al ingresar un registro no permita que un docente pueda tener una materia con el cargo de profesor (IDCargo = 1) si no tiene una antigüedad de al menos 5 años. Tampoco debe permitir que haya más de un docente con el cargo de profesor (IDCargo = 1) en la misma materia y año. Caso contrario registrar el docente a la planta docente.
+
+Create Or Alter Trigger TR_IngresarRegistro On PlantaDocente
+Instead Of Insert
+As Begin
+		
+		Declare @IDCargo TinyInt
+		Declare @Legajo BigInt
+		Declare @AñoIngreso Int
+		Declare @Antiguedad Int
+		Declare @AñoMateria Int
+		Declare @IDMateria BigInt
+		Declare @AñoYMateria Bit = 0
+
+		Select @IDCargo = ID_Cargo, @Legajo = Legajo, @AñoMateria = Año, @IDMateria = ID_Materia From inserted
+
+		Select @AñoIngreso = AñoIngreso From Docentes Where Legajo = @Legajo
+
+		Set @Antiguedad = Year(GETDATE()) - @AñoIngreso;
+
+		If @AñoMateria In (Select Año From PlantaDocente Where ID_Cargo = 1) And @IDMateria In (Select ID_Materia From PlantaDocente Where ID_Cargo = 1) Begin
+		Set @AñoYMateria = 1
+		End
+		-- FORMA 2 (Otra forma de hacerlo)
+		--Select @AñoYMateria = Count(*)
+		--From PlantaDocente 
+		--Where ID_Cargo = 1 And Año = @AñoMateria And ID_Materia = @IDMateria
+
+		Begin Try
+		Begin Transaction
+
+		If @IDCargo = 1 Begin
+
+		If @Antiguedad < 5 Begin
+			Rollback Transaction
+			Raiserror('No tiene una antigüedad de al menos 5 años', 16, 0)
+			Return
+		End
+
+		If @AñoYMateria = 1 Begin
+			Rollback Transaction
+			Raiserror('hay más de un docente con el cargo de profesor (IDCargo = 1) en la misma materia y año', 16, 0)
+			Return
+		End
+
+		-- FORMA 2
+		--If @AñoYMateria > 0 Begin
+             --Rollback Transaction
+             --Raiserror('Hay más de un docente con el cargo de profesor (IDCargo = 1) en la misma materia y año', 16, 0)
+             --Return
+        --End
+
+		Insert Into PlantaDocente(Legajo, ID_Materia, ID_Cargo, Año) 
+		Select Legajo, ID_Materia, ID_Cargo, Año From inserted
+
+		Commit Transaction
+		End
+		Else Begin
+
+		Insert Into PlantaDocente(Legajo, ID_Materia, ID_Cargo, Año) 
+		Select Legajo, ID_Materia, ID_Cargo, Año From inserted
+
+		Commit Transaction
+		End
+		End Try
+		Begin Catch
+			Rollback Transaction
+			Print Error_Message()
+		End Catch
+End
+
+--Hacer una función SQL que a partir de un legajo docente y un año devuelva la cantidad de horas semanales que dedicará esa persona a la docencia ese año. La cantidad de horas es un número entero >= 0.
+
+--NOTA: No hay que multiplicar el valor por la cantidad de semanas que hay en un año.
+Create Or Alter Function FN_Docente(
+@Legajo BigInt,
+@Año Int
+)
+Returns Int
+As Begin
+		
+		Declare @CantidadHs Int = 0
+
+		Set @CantidadHs = (Select Sum(M.HorasSemanales) From PlantaDocente PD
+		Inner Join Materias M On M.ID_Materia = PD.ID_Materia
+		Where PD.Legajo = @Legajo And PD.Año = @Año)
+
+		Return @CantidadHs
+End
+
+
+-- Prueba Select dbo.FN_Docente(1,2021)
+
+--Hacer un procedimiento almacenado que reciba un ID de Materia y liste la cantidad de docentes distintos que han trabajado en ella.
+Create Or Alter Procedure SP_CantidadDocentes(
+@IDMateria BigInt
+)
+As Begin
+		
+		Declare @CantidadDocentes Int
+
+		Set @CantidadDocentes = (Select Count(Distinct Legajo) From PlantaDocente Where ID_Materia = @IDMateria)
+
+		Select @CantidadDocentes
+End
+
+-- Prueba Exec SP_CantidadDocentes 5
